@@ -1,7 +1,14 @@
 import type React from "react"
+import { useState } from "react"
 import { Link } from "react-router"
 
-const Sidebar: React.FC = () => {
+interface SideBarProps {
+  toggleSidebar: () => void
+}
+const Sidebar: React.FC<SideBarProps> = ({ toggleSidebar }) => {
+  console.log(toggleSidebar)
+  const [tabsActive, setTabsActive] = useState(0)
+
   return (
     <div className="w-20 bg-white border-r border-gray-200 text-gray-700 flex flex-col items-center shadow-sm">
       {/* Logo */}
@@ -24,26 +31,30 @@ const Sidebar: React.FC = () => {
       {/* Navigation */}
       <nav className="flex-1 w-full">
         <ul className="flex flex-col items-center">
-          <li className="w-full py-4 flex flex-col items-center text-[#0A1A40] relative">
-            <div className="absolute left-0 w-1 h-8 bg-[#0A1A40] rounded-r-md"></div>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="size-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-              />
-            </svg>
-            <span className="text-xs mt-1 font-medium">Inicio</span>
+          <li className="w-full py-4 flex flex-col items-center text-[#0A1A40] relative" onClick={() => setTabsActive(0)}>
+            {tabsActive === 0 && (<div className="absolute left-0 w-1 h-8 bg-[#0A1A40] rounded-r-md"></div>)}
+            <Link to="/" className="flex flex-col items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="size-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                />
+              </svg>
+              <span className="text-xs mt-1 font-medium">Inicio</span>
+            </Link>
+
           </li>
           <li className="w-full py-4 flex flex-col items-center text-gray-500 hover:text-[#0A1A40] transition-colors duration-200">
-            <Link to="/alerts" className="flex flex-col items-center">
+            {tabsActive === 1 && (<div className="absolute left-0 w-1 h-8 bg-[#0A1A40] rounded-r-md"></div>)}
+            <Link to="/alerts" className="flex flex-col items-center" onClick={() => setTabsActive(1)}>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="size-6"

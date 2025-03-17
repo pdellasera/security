@@ -27,6 +27,8 @@ const CameraFeed: React.FC<CameraFeedProps> = ({
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
 
+  console.log('test', setUseRealImage)
+
   // Imágenes reales de cámaras - Usando exactamente el array proporcionado
   const realCameraImages = [
     "https://ensegundos.com.pa/wp-content/uploads/2023/05/La-Empresa-de-Transmision-Electrica.jpg",

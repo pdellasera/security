@@ -2,10 +2,13 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useAlerts } from "@/components/AlertsContext"
 
+// Modificar la interfaz Alert para incluir tipos específicos de una empresa de transmisión eléctrica
 interface Alert {
   id: string
-  type: "motion" | "crowd" | "person" | "vehicle" | "device" | "alarm"
+  type: "sobrecarga" | "fallo" | "intrusion" | "mantenimiento" | "voltaje" | "emergencia"
   subtype?: string
   location: string
   timestamp: Date
@@ -14,106 +17,9 @@ interface Alert {
   thumbnail?: string
   details?: string
   isNew?: boolean
-}
-
-const alertIcons = {
-  motion: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="size-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21.64 3.64a1.5 1.5 0 0 1 0 2.12l-1.64 1.64a1.5 1.5 0 0 1-2.12 0l-1.64-1.64a1.5 1.5 0 0 1 0-2.12l1.64-1.64a1.5 1.5 0 0 1 2.12 0l1.64 1.64z"></path>
-      <path d="m19 11 2 2"></path>
-      <path d="m21 3-2 2"></path>
-      <path d="M11 19H5c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v7.5"></path>
-      <path d="m7 13 4-4 4 4"></path>
-    </svg>
-  ),
-  crowd: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="size-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-      <circle cx="9" cy="7" r="4"></circle>
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-    </svg>
-  ),
-  person: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="size-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
-  ),
-  vehicle: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="size-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.6-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 2.8C1.4 11.3 1 12.1 1 13v3c0 .6.4 1 1 1h2"></path>
-      <circle cx="7" cy="17" r="2"></circle>
-      <path d="M9 17h6"></path>
-      <circle cx="17" cy="17" r="2"></circle>
-    </svg>
-  ),
-  device: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="size-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="3" y="11" width="18" height="10" rx="2"></rect>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-    </svg>
-  ),
-  alarm: (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="size-5"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-      <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-    </svg>
-  ),
+  codigoEquipo?: string
+  area?: string
+  nivelCriticidad?: "bajo" | "medio" | "alto" | "critico"
 }
 
 // Imágenes disponibles para las alertas
@@ -122,86 +28,61 @@ const availableImages = [
   "https://www.prensalibre.com/wp-content/uploads/2018/12/9c50a257-3f80-4640-b9cf-4a6d38bd9de4.jpg?quality=52",
   "https://www.el19digital.com/files/articulos/262070.jpg",
   "https://cdn.www.gob.pe/uploads/document/file/2148305/Inversiones%20en%20transmisi%C3%B3n%20el%C3%A9ctrica.jpg.jpg",
-  "https://media.ecotvpanama.com/p/c023c81db499a36d6b4da77d01d5cd4e/adjuntos/323/imagenes/018/510/0018510808/855x0/smart/etesa-mantenimiento-2024jpeg.jpeg",
+  "https://media.ecotvpanama.com/p/c023c81db499a36d6b4da77d01d5cd4e/adjuntos/323/imagenes/018/510/0018510808jpg.jpeg",
   "https://pbs.twimg.com/media/EQweMjIXYAAOGAf.jpg:large",
 ]
 
-// Datos de ejemplo para alertas con imágenes para todas
+// Generar códigos de equipo aleatorios para transmisión eléctrica
+const generarCodigoEquipo = () => {
+  const prefijos = ["TR", "SE", "LT", "CT", "PT"]
+  const prefijo = prefijos[Math.floor(Math.random() * prefijos.length)]
+  const numero = Math.floor(Math.random() * 900) + 100
+  return `${prefijo}-${numero}`
+}
+
+// Datos de ejemplo para alertas específicas de transmisión eléctrica
 const mockAlerts: Alert[] = [
   {
     id: "1",
-    type: "motion",
-    location: "Exterior",
+    type: "sobrecarga",
+    location: "Subestación Norte",
     timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutos atrás
     cameraId: 1,
     cameraName: "Torre de Transmisión CD41-E",
-    details: "Movimiento detectado en área restringida",
+    details: "Sobrecarga detectada en transformador principal",
     thumbnail: availableImages[0],
     isNew: true,
+    codigoEquipo: "TR-347",
+    area: "Subestación Norte",
+    nivelCriticidad: "alto",
   },
   {
     id: "2",
-    type: "crowd",
-    subtype: "vehicle",
-    location: "Exterior",
+    type: "voltaje",
+    location: "Línea de Transmisión Este",
     timestamp: new Date(Date.now() - 1000 * 60 * 10), // 10 minutos atrás
     cameraId: 2,
     cameraName: "Subestación Eléctrica CD62-E",
-    details: "5 o más vehículos",
+    details: "Fluctuación de voltaje detectada en línea principal",
     thumbnail: availableImages[1],
     isNew: true,
+    codigoEquipo: "LT-113",
+    area: "Sector Este",
+    nivelCriticidad: "medio",
   },
   {
     id: "3",
-    type: "crowd",
-    subtype: "person",
-    location: "Exterior",
+    type: "intrusion",
+    location: "Perímetro Subestación",
     timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutos atrás
     cameraId: 3,
     cameraName: "Línea de Transmisión CD51-E",
-    details: "2 o más personas",
+    details: "Intrusión detectada en perímetro de seguridad",
     thumbnail: availableImages[2],
     isNew: true,
-  },
-  {
-    id: "4",
-    type: "vehicle",
-    location: "Exterior",
-    timestamp: new Date(Date.now() - 1000 * 60 * 20), // 20 minutos atrás
-    cameraId: 4,
-    cameraName: "Transformador Principal CP81-E",
-    details: "Vehículos detectados",
-    thumbnail: availableImages[3],
-  },
-  {
-    id: "5",
-    type: "person",
-    location: "Exterior",
-    timestamp: new Date(Date.now() - 1000 * 60 * 25), // 25 minutos atrás
-    cameraId: 5,
-    cameraName: "Estación de Control CB61-E",
-    details: "Personas detectadas",
-    thumbnail: availableImages[4],
-  },
-  {
-    id: "6",
-    type: "device",
-    location: "Exterior",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutos atrás
-    cameraId: 6,
-    cameraName: "Cruce de Líneas CD41-E",
-    details: "Dispositivo de entrada auxiliar de puerta modificado",
-    thumbnail: availableImages[5],
-  },
-  {
-    id: "7",
-    type: "motion",
-    location: "Exterior",
-    timestamp: new Date(Date.now() - 1000 * 60 * 35), // 35 minutos atrás
-    cameraId: 1,
-    cameraName: "Torre de Transmisión CD41-E",
-    details: "Movimiento detectado",
-    thumbnail: availableImages[0],
+    codigoEquipo: "SE-113",
+    area: "Perímetro Sur",
+    nivelCriticidad: "alto",
   },
 ]
 
@@ -213,17 +94,48 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
   const [alerts, setAlerts] = useState<Alert[]>(mockAlerts)
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null)
   const [filter, setFilter] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState<string>("")
+
+  // Añadir el uso del contexto dentro del componente AlertsList
+  const { showNotification, incrementAlertCount } = useAlerts()
 
   // Formatear la hora en formato de 24 horas (HH:MM)
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false })
   }
 
+  // Formatear la fecha completa
+  const formatDate = (date: Date) => {
+    return (
+      date.toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }) +
+      " " +
+      formatTime(date)
+    )
+  }
+
   // Filtrar alertas
-  const filteredAlerts = alerts.filter((alert) => {
-    if (filter === "all") return true
-    return alert.type === filter
-  })
+  const filteredAlerts = alerts
+    .filter((alert) => {
+      if (filter === "all") return true
+      return alert.type === filter
+    })
+    .filter((alert) => {
+      // Aplicar filtro de búsqueda
+      if (!searchQuery) return true
+      const searchTerm = searchQuery.toLowerCase()
+      return (
+        alert.cameraName.toLowerCase().includes(searchTerm) ||
+        alert.location.toLowerCase().includes(searchTerm) ||
+        alert.details?.toLowerCase().includes(searchTerm) ||
+        alert.type.toLowerCase().includes(searchTerm) ||
+        alert.codigoEquipo?.toLowerCase().includes(searchTerm) ||
+        alert.area?.toLowerCase().includes(searchTerm)
+      )
+    })
 
   // Seleccionar una alerta
   const handleSelectAlert = (alert: Alert) => {
@@ -236,72 +148,211 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
     setAlerts((prevAlerts) => prevAlerts.map((a) => (a.id === alert.id ? { ...a, isNew: false } : a)))
   }
 
-  // Simular nuevas alertas periódicamente
+  // Actualizar la función useEffect que genera alertas aleatorias
   useEffect(() => {
+    // Contador para limitar a 10 alertas
+    let alertCount = 0;
+    const maxAlerts = 10;
+    
     const interval = setInterval(() => {
-      // 10% de probabilidad de generar una nueva alerta
-      if (Math.random() < 0.1) {
-        const alertTypes: Array<Alert["type"]> = ["motion", "crowd", "person", "vehicle", "device", "alarm"]
-        const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)]
-        const randomCamera = Math.floor(Math.random() * 6) + 1 // Cámaras 1-6
-        const cameraNames = [
-          "Torre de Transmisión CD41-E",
-          "Subestación Eléctrica CD62-E",
-          "Línea de Transmisión CD51-E",
-          "Transformador Principal CP81-E",
-          "Estación de Control CB61-E",
-          "Cruce de Líneas CD41-E",
-        ]
-
-        const newAlert: Alert = {
-          id: Date.now().toString(),
-          type: randomType,
-          location: "Exterior",
-          timestamp: new Date(),
-          cameraId: randomCamera,
-          cameraName: cameraNames[randomCamera - 1],
-          details: `${
-            randomType === "motion"
-              ? "Movimiento"
-              : randomType === "crowd"
-                ? "Multitud"
-                : randomType === "person"
-                  ? "Persona"
-                  : randomType === "vehicle"
-                    ? "Vehículo"
-                    : randomType === "device"
-                      ? "Dispositivo"
-                      : "Alarma"
-          } detectado`,
-          thumbnail: availableImages[randomCamera - (1 % availableImages.length)],
-          isNew: true,
-        }
-
-        // Añadir la nueva alerta al principio de la lista
-        setAlerts((prevAlerts) => [newAlert, ...prevAlerts.slice(0, 19)]) // Mantener solo las 20 alertas más recientes
+      // Detener después de 10 alertas
+      if (alertCount >= maxAlerts) {
+        clearInterval(interval);
+        return;
       }
+      
+      alertCount++;
+      
+      const alertTypes: Array<Alert["type"]> = ["sobrecarga", "fallo", "intrusion", "mantenimiento", "voltaje", "emergencia"]
+      const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)]
+      const randomCamera = Math.floor(Math.random() * 6) + 1 // Cámaras 1-6
+      const cameraNames = [
+        "Torre de Transmisión CD41-E",
+        "Subestación Eléctrica CD62-E",
+        "Línea de Transmisión CD51-E",
+        "Transformador Principal CP81-E",
+        "Estación de Control CB61-E",
+        "Cruce de Líneas CD41-E",
+      ]
+      
+      const areas = ["Subestación Norte", "Subestación Sur", "Línea de Transmisión Este", "Perímetro Principal", "Central Térmica"];
+      const detalles = {
+        sobrecarga: [
+          "Sobrecarga detectada en transformador principal",
+          "Sobrecarga en línea de transmisión de alta tensión",
+          "Sobrecarga en sistema de distribución secundario"
+        ],
+        fallo: [
+          "Fallo en sistema de refrigeración de transformador",
+          "Fallo en aisladores de línea de transmisión",
+          "Fallo en sistema de respaldo de energía"
+        ],
+        intrusion: [
+          "Intrusión detectada en perímetro de seguridad",
+          "Acceso no autorizado a subestación",
+          "Intrusión en torre de transmisión"
+        ],
+        mantenimiento: [
+          "Mantenimiento programado requerido en transformador",
+          "Alerta de mantenimiento preventivo en línea",
+          "Mantenimiento urgente en sistema de protección"
+        ],
+        voltaje: [
+          "Fluctuación de voltaje detectada en línea principal",
+          "Caída de voltaje en subestación secundaria",
+          "Pico de voltaje detectado en sistema de distribución"
+        ],
+        emergencia: [
+          "Condición crítica en transformador principal",
+          "Emergencia por sobrecalentamiento en subestación",
+          "Alerta de incendio en instalaciones eléctricas"
+        ]
+      };
+
+      const criticidadPorTipo = {
+        sobrecarga: "alto",
+        fallo: "medio",
+        intrusion: "alto",
+        mantenimiento: "bajo",
+        voltaje: "medio",
+        emergencia: "critico"
+      };
+
+      const detallesPorTipo = detalles[randomType];
+      const detalle = detallesPorTipo[Math.floor(Math.random() * detallesPorTipo.length)];
+      const nivelCriticidad = criticidadPorTipo[randomType] as "bajo" | "medio" | "alto" | "critico";
+
+      const newAlert: Alert = {
+        id: Date.now().toString(),
+        type: randomType,
+        location: areas[Math.floor(Math.random() * areas.length)],
+        timestamp: new Date(),
+        cameraId: randomCamera,
+        cameraName: cameraNames[randomCamera - 1],
+        details: detalle,
+        thumbnail: availableImages[(randomCamera - 1) % availableImages.length],
+        isNew: true,
+        codigoEquipo: generarCodigoEquipo(),
+        area: areas[Math.floor(Math.random() * areas.length)],
+        nivelCriticidad: nivelCriticidad
+      }
+
+      // Añadir la nueva alerta al principio de la lista
+      setAlerts((prevAlerts) => [newAlert, ...prevAlerts.slice(0, 19)]);
+
+      // Mostrar notificación y actualizar contador
+      showNotification(`Nueva alerta: ${newAlert.details}`, "warning");
+      incrementAlertCount();
+      
     }, 30000) // Cada 30 segundos
 
+    // Para demostración, generamos la primera alerta inmediatamente
+    setTimeout(() => {
+      const alertTypes: Array<Alert["type"]> = ["sobrecarga", "fallo", "intrusion", "mantenimiento", "voltaje", "emergencia"]
+      const randomType = alertTypes[Math.floor(Math.random() * alertTypes.length)]
+      const randomCamera = Math.floor(Math.random() * 6) + 1
+      const cameraNames = [
+        "Torre de Transmisión CD41-E",
+        "Subestación Eléctrica CD62-E",
+        "Línea de Transmisión CD51-E",
+        "Transformador Principal CP81-E",
+        "Estación de Control CB61-E",
+        "Cruce de Líneas CD41-E",
+      ]
+      
+      const areas = ["Subestación Norte", "Subestación Sur", "Línea de Transmisión Este", "Perímetro Principal", "Central Térmica"];
+      const detalles = {
+        sobrecarga: [
+          "Sobrecarga detectada en transformador principal",
+          "Sobrecarga en línea de transmisión de alta tensión",
+          "Sobrecarga en sistema de distribución secundario"
+        ],
+        fallo: [
+          "Fallo en sistema de refrigeración de transformador",
+          "Fallo en aisladores de línea de transmisión",
+          "Fallo en sistema de respaldo de energía"
+        ],
+        intrusion: [
+          "Intrusión detectada en perímetro de seguridad",
+          "Acceso no autorizado a subestación",
+          "Intrusión en torre de transmisión"
+        ],
+        mantenimiento: [
+          "Mantenimiento programado requerido en transformador",
+          "Alerta de mantenimiento preventivo en línea",
+          "Mantenimiento urgente en sistema de protección"
+        ],
+        voltaje: [
+          "Fluctuación de voltaje detectada en línea principal",
+          "Caída de voltaje en subestación secundaria",
+          "Pico de voltaje detectado en sistema de distribución"
+        ],
+        emergencia: [
+          "Condición crítica en transformador principal",
+          "Emergencia por sobrecalentamiento en subestación",
+          "Alerta de incendio en instalaciones eléctricas"
+        ]
+      };
+
+      const criticidadPorTipo = {
+        sobrecarga: "alto",
+        fallo: "medio",
+        intrusion: "alto",
+        mantenimiento: "bajo",
+        voltaje: "medio",
+        emergencia: "critico"
+      };
+
+      const detallesPorTipo = detalles[randomType];
+      const detalle = detallesPorTipo[Math.floor(Math.random() * detallesPorTipo.length)];
+      const nivelCriticidad = criticidadPorTipo[randomType] as "bajo" | "medio" | "alto" | "critico";
+
+      const newAlert: Alert = {
+        id: Date.now().toString(),
+        type: randomType,
+        location: areas[Math.floor(Math.random() * areas.length)],
+        timestamp: new Date(),
+        cameraId: randomCamera,
+        cameraName: cameraNames[randomCamera - 1],
+        details: detalle,
+        thumbnail: availableImages[(randomCamera - 1) % availableImages.length],
+        isNew: true,
+        codigoEquipo: generarCodigoEquipo(),
+        area: areas[Math.floor(Math.random() * areas.length)],
+        nivelCriticidad: nivelCriticidad
+      }
+
+      alertCount++;
+      setAlerts((prevAlerts) => [newAlert, ...prevAlerts.slice(0, 19)])
+    }, 2000);
+
     return () => clearInterval(interval)
-  }, [])
+  }, [showNotification, incrementAlertCount])
 
   return (
     <div className="flex h-full">
       {/* Lista de alertas */}
       <div className="w-full md:w-1/3 bg-white text-gray-800 border-r border-gray-200 flex flex-col h-full">
+        {/* Actualizar los botones de filtro para mostrar categorías relevantes para transmisión eléctrica */}
         <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-gray-50">
           <div className="flex space-x-2">
             <button
               className={`px-3 py-1 text-xs rounded-full ${filter === "all" ? "bg-[#0A1A40] text-white" : "bg-gray-200 text-gray-600"}`}
               onClick={() => setFilter("all")}
             >
-              Alertas
+              Todas las alertas
             </button>
             <button
-              className={`px-3 py-1 text-xs rounded-full ${filter === "motion" ? "bg-[#0A1A40] text-white" : "bg-gray-200 text-gray-600"}`}
-              onClick={() => setFilter("motion")}
+              className={`px-3 py-1 text-xs rounded-full ${filter === "sobrecarga" ? "bg-[#0A1A40] text-white" : "bg-gray-200 text-gray-600"}`}
+              onClick={() => setFilter("sobrecarga")}
             >
-              Eventos del dispositivo
+              Sobrecargas
+            </button>
+            <button
+              className={`px-3 py-1 text-xs rounded-full ${filter === "intrusion" ? "bg-[#0A1A40] text-white" : "bg-gray-200 text-gray-600"}`}
+              onClick={() => setFilter("intrusion")}
+            >
+              Seguridad
             </button>
           </div>
           <button className="text-gray-600 hover:text-gray-800">
@@ -328,6 +379,8 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
               type="text"
               placeholder="Buscar alertas"
               className="w-full bg-white text-gray-800 px-10 py-2 rounded-md text-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0A1A40] focus:border-[#0A1A40]"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -342,23 +395,26 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
-            <button className="absolute right-3 top-1/2 transform -translate-y-1/2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-4 text-gray-500"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            {searchQuery && (
+              <button
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                onClick={() => setSearchQuery("")}
               >
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <polyline points="9 21 3 21 3 15"></polyline>
-                <line x1="21" y1="3" x2="14" y2="10"></line>
-                <line x1="3" y1="21" x2="10" y2="14"></line>
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="size-4 text-gray-500"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -384,98 +440,96 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
               <p>No hay alertas que mostrar</p>
             </div>
           ) : (
-            filteredAlerts.map((alert) => (
-              <div
-                key={alert.id}
-                className={`flex p-3 border-b border-gray-200 hover:bg-gray-100 cursor-pointer ${
-                  selectedAlert?.id === alert.id ? "bg-gray-100" : ""
-                } ${alert.isNew ? "border-l-2 border-l-[#7FFF00]" : ""}`}
-                onClick={() => handleSelectAlert(alert)}
-              >
-                {/* Imagen a la izquierda */}
-                <div className="mr-3 w-20 h-20 flex-shrink-0">
-                  <img
-                    src={alert.thumbnail || "/placeholder.svg"}
-                    alt={alert.details || "Alerta"}
-                    className="w-full h-full object-cover rounded-md"
-                    onError={(e) => {
-                      // Fallback a una imagen por defecto si hay error
-                      e.currentTarget.src = availableImages[0]
-                    }}
-                  />
-                </div>
-
-                {/* Contenido de texto a la derecha con altura fija */}
-                <div className="flex-1 min-w-0 h-20 flex flex-col justify-between overflow-hidden">
-                  {/* Encabezado con tipo y hora */}
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center">
-                      <div className="size-4 bg-[#0A1A40] rounded-full flex items-center justify-center text-[#7FFF00] mr-1.5">
-                        <div className="size-2 bg-[#7FFF00] rounded-full"></div>
-                      </div>
-                      <div className="font-medium text-sm text-gray-800">
-                        {alert.type === "motion"
-                          ? "Movimiento"
-                          : alert.type === "crowd" && alert.subtype === "vehicle"
-                            ? "Multitud"
-                            : alert.type === "crowd" && alert.subtype === "person"
-                              ? "Multitud"
-                              : alert.type === "person"
-                                ? "Movimiento"
-                                : alert.type === "vehicle"
-                                  ? "Movimiento"
-                                  : alert.type === "device"
-                                    ? "Dispositivo"
-                                    : "Alarma"}
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 ml-2 whitespace-nowrap bg-gray-100 px-1.5 py-0.5 rounded">
-                      {formatTime(alert.timestamp)}
-                    </div>
+            <AnimatePresence initial={false}>
+              {filteredAlerts.map((alert) => (
+                <motion.div
+                  key={alert.id}
+                  initial={{ opacity: 0, height: 0, marginTop: -20 }}
+                  animate={{ opacity: 1, height: "auto", marginTop: 0 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className={`flex p-3 border-b border-gray-200 hover:bg-gray-100 cursor-pointer ${
+                    selectedAlert?.id === alert.id ? "bg-gray-100" : ""
+                  } ${alert.isNew ? "border-l-2 border-l-[#7FFF00]" : ""}`}
+                  onClick={() => handleSelectAlert(alert)}
+                >
+                  {/* Imagen a la izquierda */}
+                  <div className="mr-3 w-20 h-20 flex-shrink-0 overflow-hidden">
+                    <motion.img
+                      initial={{ scale: 1.1 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5 }}
+                      src={alert.thumbnail || "/placeholder.svg"}
+                      alt={alert.details || "Alerta"}
+                      className="w-full h-full object-cover rounded-md"
+                      onError={(e: { currentTarget: { src: string } }) => {
+                        // Fallback a una imagen por defecto si hay error
+                        e.currentTarget.src = availableImages[0]
+                      }}
+                    />
                   </div>
 
-                  {/* Detalles de la alerta */}
-                  <div className="mt-1">
-                    <p className="text-xs font-medium text-gray-700 truncate">{alert.details}</p>
-                    <div className="flex items-center mt-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="size-3 text-gray-500 mr-1"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                  {/* Contenido de texto a la derecha */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div className="font-medium text-sm truncate text-gray-800">
+                        {alert.details || "Alerta sin detalles"}
+                      </div>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="text-xs text-gray-500 ml-2 whitespace-nowrap"
                       >
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
-                      <p className="text-xs text-gray-500 truncate">
-                        {alert.cameraName} — {alert.location}
-                      </p>
+                        {formatTime(alert.timestamp)}
+                      </motion.div>
                     </div>
-                  </div>
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="text-xs text-gray-600 mt-1 truncate"
+                    >
+                      Equipo: {alert.codigoEquipo}
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="text-xs text-gray-500 mt-1 truncate"
+                    >
+                      {alert.cameraName} — {alert.area}
+                    </motion.div>
 
-                  {/* Etiqueta de tipo de alerta */}
-                  <div className="mt-auto">
-                    <span className="inline-block text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full truncate">
-                      {alert.type === "motion"
-                        ? "Detección de movimiento"
-                        : alert.type === "crowd"
-                          ? "Detección de multitud"
-                          : alert.type === "person"
-                            ? "Detección de persona"
-                            : alert.type === "vehicle"
-                              ? "Detección de vehículo"
-                              : alert.type === "device"
-                                ? "Alerta de dispositivo"
-                                : "Alarma de seguridad"}
-                    </span>
+                    {/* Indicador de tipo de alerta */}
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.3, type: "spring" }}
+                      className="mt-2 flex items-center"
+                    >
+                      <div 
+                        className={`size-4 rounded-full flex items-center justify-center mr-1 ${
+                          alert.nivelCriticidad === 'critico' ? 'bg-red-600' : 
+                          alert.nivelCriticidad === 'alto' ? 'bg-orange-500' : 
+                          alert.nivelCriticidad === 'medio' ? 'bg-yellow-500' : 
+                          'bg-green-500'
+                        }`}
+                      >
+                        <motion.div 
+                          animate={{ scale: alert.isNew ? [1, 1.2, 1] : 1 }}
+                          transition={{ repeat: alert.isNew ? Number.POSITIVE_INFINITY : 0, duration: 2 }}
+                          className="size-2 bg-white rounded-full"
+                        />
+                      </div>
+                      <span className="text-xs text-gray-600">
+                        Nivel: {alert.nivelCriticidad}
+                      </span>
+                    </motion.div>
                   </div>
-                </div>
-              </div>
-            ))
+                </motion.div>
+              ))}
+            </AnimatePresence>
           )}
 
           <div className="p-4 flex justify-center">
@@ -499,27 +553,38 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
       </div>
 
       {/* Vista previa de la alerta */}
-      <div className="hidden md:block md:w-2/3 bg-black h-full">
+      <div className="hidden md:flex md:w-2/3 bg-white h-full flex-col">
         {selectedAlert ? (
-          <div className="h-full flex flex-col">
-            <div className="flex-1 relative">
-              <img
-                src={selectedAlert.thumbnail || "/placeholder.svg"}
-                alt={selectedAlert.details || "Vista previa de alerta"}
-                className="w-full h-[65vh] object-cover"
-                onError={(e) => {
-                  // Fallback a una imagen por defecto si hay error
-                  e.currentTarget.src = availableImages[0]
-                }}
-              />
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="h-full flex flex-col"
+          >
+            {/* Título del panel de detalles */}
+            <div className="p-4 bg-[#0A1A40] text-white border-b border-gray-200">
+              <h2 className="text-lg font-medium">Detalles de Alerta - Sistema de Transmisión Eléctrica</h2>
+            </div>
 
-              {/* Controles de video */}
-              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
-                <div className="flex items-center justify-center space-x-4">
-                  <button className="text-white hover:text-[#7FFF00]">
+            {/* Imagen más pequeña */}
+            <div className="p-4 bg-gray-50">
+              <div className="w-full h-64 relative">
+                <img
+                  src={selectedAlert.thumbnail || "/placeholder.svg"}
+                  alt={selectedAlert.details || "Vista previa de alerta"}
+                  className="w-full h-full object-cover rounded-md"
+                  onError={(e) => {
+                    // Fallback a una imagen por defecto si hay error
+                    e.currentTarget.src = availableImages[0]
+                  }}
+                />
+
+                {/* Controles de imagen */}
+                <div className="absolute top-2 right-2 flex space-x-2">
+                  <button className="bg-white/80 hover:bg-white p-1 rounded-full">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="size-6"
+                      className="h-5 w-5"
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
@@ -527,85 +592,45 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     >
-                      <polygon points="19 20 9 12 19 4 19 20"></polygon>
-                      <line x1="5" y1="19" x2="5" y2="5"></line>
-                    </svg>
-                  </button>
-                  <button className="text-white hover:text-[#7FFF00]">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-8"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="10"></circle>
-                      <polygon points="10 8 16 12 10 16 10 8"></polygon>
-                    </svg>
-                  </button>
-                  <button className="text-white hover:text-[#7FFF00]">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="size-6"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <polygon points="5 4 15 12 5 20 5 4"></polygon>
-                      <line x1="19" y1="5" x2="19" y2="19"></line>
-                    </svg>
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65  1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65
+0 0 0 1 1.51V3a2 2 0 0 1 2 2 2 2 0 0 1 2-2v.09a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2 2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51V3a2 2 0 0 1 2 2 2 2 0 0 1 2 2"
+                    /></svg>
                   </button>
                 </div>
               </div>
-            </div>
 
-            <div className="p-4 bg-white border-t border-gray-200">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-gray-800 font-medium">
-                    {selectedAlert.type === "motion"
-                      ? "Movimiento"
-                      : selectedAlert.type === "crowd"
-                        ? "Multitud"
-                        : selectedAlert.type === "person"
-                          ? "Persona"
-                          : selectedAlert.type === "vehicle"
-                            ? "Vehículo"
-                            : selectedAlert.type === "device"
-                              ? "Dispositivo"
-                              : "Alarma"}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {selectedAlert.cameraName} — {selectedAlert.location}
-                  </p>
-                </div>
-                <div className="text-sm text-gray-600">Hoy, a las {formatTime(selectedAlert.timestamp)} GMT-5</div>
+              {/* Detalles de la alerta */}
+              <div className="p-4">
+                <h3 className="text-lg font-medium text-gray-800 mb-2">{selectedAlert.details}</h3>
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Código de Equipo:</strong> {selectedAlert.codigoEquipo}
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Ubicación:</strong> {selectedAlert.location}
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Área:</strong> {selectedAlert.area}
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Nivel de Criticidad:</strong> {selectedAlert.nivelCriticidad}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Fecha y Hora:</strong> {formatDate(selectedAlert.timestamp)}
+                </p>
+              </div>
+
+              {/* Acciones */}
+              <div className="p-4 border-t border-gray-200">
+                <button className="bg-[#0A1A40] hover:bg-[#152A5A] text-white font-medium py-2 px-4 rounded">
+                  Resolver Alerta
+                </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <div className="h-full flex items-center justify-center bg-gray-100">
-            <div className="text-center text-gray-500">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="size-16 mx-auto mb-2"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"></path>
-              </svg>
-              <p>Selecciona una alerta para ver los detalles</p>
-            </div>
+          <div className="flex items-center justify-center h-full text-gray-500">
+            Seleccione una alerta para ver los detalles
           </div>
         )}
       </div>

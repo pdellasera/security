@@ -150,7 +150,7 @@ const CameraSimulation: React.FC<CameraSimulationProps> = ({
 
         // Add camera info
         if (showCameraInfo) {
-          drawCameraInfo(ctx, width, height, cameraName, cameraId, cameraType)
+          drawCameraInfo(ctx, width, height, cameraName)
         }
       }
 
@@ -361,8 +361,8 @@ const CameraSimulation: React.FC<CameraSimulationProps> = ({
     width: number,
     height: number,
     cameraName: string,
-    cameraId: string,
-    cameraType: string,
+    // cameraId: string,
+    // cameraType: string,
   ) => {
     ctx.font = "14px sans-serif"
     ctx.fillStyle = "#fff"
