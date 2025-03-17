@@ -7,6 +7,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f5f5;
+  overscroll-behavior: none; /* Prevenir el rebote en iOS */
 }
 
 /* Animación de pulso para el indicador de grabación */
@@ -69,5 +70,85 @@ a:focus {
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(127, 255, 0, 0.5);
+}
+
+/* Mejoras para dispositivos táctiles */
+@media (hover: none) {
+  button,
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px; /* Prevenir zoom en iOS */
+  }
+}
+
+/* Prevenir selección de texto en elementos interactivos */
+button,
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Mejoras para pantallas pequeñas */
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+
+  .text-xs {
+    font-size: 0.75rem;
+  }
+
+  .text-sm {
+    font-size: 0.875rem;
+  }
+}
+
+/* Añadir estas clases al final del archivo para ocultar la barra de desplazamiento pero mantener la funcionalidad */
+
+/* Ocultar scrollbar pero mantener funcionalidad */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+/* Mejorar la experiencia táctil para elementos de navegación */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.5rem;
+  }
+
+  .nav-item {
+    position: relative;
+  }
+
+  .nav-item::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: currentColor;
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+  }
+
+  .nav-item.active::after {
+    transform: scaleX(1);
+  }
 }
 

@@ -7,10 +7,12 @@ import type { Camera } from "../types/Camera"
 
 interface CameraCardProps {
   camera: Camera
+  isMobile?: boolean
 }
 
-const CameraCard: React.FC<CameraCardProps> = ({ camera }) => {
+const CameraCard: React.FC<CameraCardProps> = ({ camera, isMobile = false }) => {
   const [isHovered, setIsHovered] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [lastMotionTime, setLastMotionTime] = useState(camera.lastMotion)
 
   // Actualizar el tiempo de último movimiento periódicamente para cámaras en línea
@@ -30,9 +32,18 @@ const CameraCard: React.FC<CameraCardProps> = ({ camera }) => {
     return () => clearInterval(interval)
   }, [camera.status])
 
+  // Función para alternar la expansión en móvil
+  const toggleExpand = () => {
+    if (isMobile) {
+      setIsExpanded(!isExpanded)
+    }
+  }
+
   return (
     <div
-      className="bg-white rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-[#0A1A40]/10"
+      className={`bg-white rounded-md overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300 border border-[#0A1A40]/10 ${
+        isExpanded ? "col-span-1 sm:col-span-2 md:col-span-3" : ""
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -56,36 +67,70 @@ const CameraCard: React.FC<CameraCardProps> = ({ camera }) => {
           </span>
         </div>
 
-        {/* Hover controls */}
-        {isHovered && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-            <div className="flex gap-2">
-              <button className="bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                  <path
-                    fillRule="evenodd"
-                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <button className="bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path
-                    fillRule="evenodd"
-                    d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-              <button className="bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
-                </svg>
-              </button>
-            </div>
+        {/* Hover controls or always visible on mobile */}
+        <div
+          className={`absolute inset-0 bg-black/20 flex items-center justify-center transition-opacity duration-200 ${
+            isHovered || isMobile ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          <div className="flex gap-2">
+            <button
+              className="bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+              aria-label="Ver cámara"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                <path
+                  fillRule="evenodd"
+                  d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            <button
+              className="bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+              aria-label="Descargar grabación"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+            <button
+              className="bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+              aria-label="Ajustes de cámara"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+              </svg>
+            </button>
           </div>
+        </div>
+
+        {/* Expand/collapse button for mobile */}
+        {isMobile && (
+          <button
+            onClick={toggleExpand}
+            className="absolute bottom-2 right-2 bg-[#0A1A40]/80 text-white p-2 rounded-full hover:bg-[#7FFF00] hover:text-[#0A1A40] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white"
+            aria-label={isExpanded ? "Contraer" : "Expandir"}
+          >
+            {isExpanded ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="size-5" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </button>
         )}
 
         {/* Last motion indicator */}

@@ -3,12 +3,31 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import CameraCard from "./CameraCard"
-import type { Camera } from "../types/Camera"
 import { cameras } from "@/data/cameras"
+import { Camera } from "@/types/Camera"
+
 
 
 const CameraGrid: React.FC = () => {
   const [displayCameras, setDisplayCameras] = useState<Camera[]>(cameras)
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Detectar si es un dispositivo móvil
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    // Comprobar al cargar
+    checkIfMobile()
+
+    // Comprobar al cambiar el tamaño de la ventana
+    window.addEventListener("resize", checkIfMobile)
+
+    return () => {
+      window.removeEventListener("resize", checkIfMobile)
+    }
+  }, [])
 
   // Efecto para simular actividad en las cámaras (cambios de estado aleatorios)
   useEffect(() => {
@@ -43,11 +62,11 @@ const CameraGrid: React.FC = () => {
 
   if (displayCameras.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-synergy-navy">
+      <div className="flex items-center justify-center h-64 text-[#0A1A40]">
         <div className="text-center">
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-12 w-12 mx-auto text-synergy-navy/50"
+            className="size-12 mx-auto text-[#0A1A40]/50"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -60,7 +79,7 @@ const CameraGrid: React.FC = () => {
             />
           </svg>
           <p className="mt-2 text-sm font-medium">Ninguna cámara coincide con tu filtro</p>
-          <button className="mt-2 text-synergy-green text-sm hover:text-synergy-greenDark transition-colors duration-200 font-medium">
+          <button className="mt-2 text-[#7FFF00] text-sm hover:text-[#65CC00] transition-colors duration-200 font-medium">
             Limpiar filtros
           </button>
         </div>
@@ -69,9 +88,9 @@ const CameraGrid: React.FC = () => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
       {displayCameras.map((camera) => (
-        <CameraCard key={camera.id} camera={camera} />
+        <CameraCard key={camera.id} camera={camera} isMobile={isMobile} />
       ))}
     </div>
   )
