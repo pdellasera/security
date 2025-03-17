@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import CameraSimulation from "./CameraSimulation"
 
 interface CameraFeedProps {
@@ -24,18 +24,18 @@ const CameraFeed: React.FC<CameraFeedProps> = ({
   isOffline = false,
 }) => {
   const [useRealImage, setUseRealImage] = useState(true)
-  const [imageLoaded, setImageLoaded] = useState(false)
-  const [imageError, setImageError] = useState(false)
-  const [loadingRetries, setLoadingRetries] = useState(0)
+  // const [imageLoaded, setImageLoaded] = useState(false)
+  // const [imageError, setImageError] = useState(false)
+  // const [loadingRetries, setLoadingRetries] = useState(0)
 
   console.log('setUseRealImage', setUseRealImage)
+
   // Imágenes reales de cámaras - Usando exactamente el array proporcionado
   const realCameraImages = [
     "https://ensegundos.com.pa/wp-content/uploads/2023/05/La-Empresa-de-Transmision-Electrica.jpg",
-    "https://cdn.www.gob.pe/uploads/document/file/2148305/Inversiones%20en%20transmisi%C3%B3n%20el%C3%A9ctrica.jpg.jpg",
+    "https://www.etesa.com.pa/uploads/noticias/imagen/Bocas_2.jpg",
     "https://www.el19digital.com/files/articulos/262070.jpg",
-    "https://www.prensalibre.com/wp-content/uploads/2018/12/9c50a257-3f80-4640-b9cf-4a6d38bd9de4.jpg?quality=52",
-    "https://media.ecotvpanama.com/p/c023c81db499a36d6b4da77d01d5cd4e/adjuntos/323/imagenes/018/510/0018510808jpg.jpeg",
+    "https://www.etesa.com.pa/uploads/noticias/imagen/CHANGUINOLA.jpg",
     "https://pbs.twimg.com/media/EQweMjIXYAAOGAf.jpg:large",
   ]
 
@@ -45,56 +45,56 @@ const CameraFeed: React.FC<CameraFeedProps> = ({
   // Si el ID es mayor a 6, mostrar como offline
   const shouldShowOffline = numericId > 6 || isOffline
 
-  // Seleccionar imagen basada en el ID de la cámara
-  const getImageForCamera = (id: string | number) => {
-    const numId = typeof id === "string" ? Number.parseInt(id.replace(/\D/g, "")) || 1 : id
-    // Asegurarse de que el índice esté dentro del rango del array (1-6)
-    const index = (numId - 1) % 6
-    return realCameraImages[index]
-  }
+  // // Seleccionar imagen basada en el ID de la cámara
+  // const getImageForCamera = (id: string | number) => {
+  //   const numId = typeof id === "string" ? Number.parseInt(id.replace(/\D/g, "")) || 1 : id
+  //   // Asegurarse de que el índice esté dentro del rango del array (1-6)
+  //   const index = (numId - 1) % 6
+  //   return realCameraImages[index]
+  // }
 
-  // Manejar errores de carga de imagen
-  const handleImageError = () => {
-    setImageError(true)
-    // Intentar cargar la imagen nuevamente hasta 3 veces
-    if (loadingRetries < 3) {
-      setTimeout(() => {
-        setLoadingRetries((prev) => prev + 1)
-        setImageError(false)
-        setImageLoaded(false)
-      }, 1000)
-    }
-  }
+  // // Manejar errores de carga de imagen
+  // const handleImageError = () => {
+  //   setImageError(true)
+  //   // Intentar cargar la imagen nuevamente hasta 3 veces
+  //   if (loadingRetries < 3) {
+  //     setTimeout(() => {
+  //       setLoadingRetries((prev) => prev + 1)
+  //       setImageError(false)
+  //       setImageLoaded(false)
+  //     }, 1000)
+  //   }
+  // }
 
-  // Manejar carga exitosa de imagen
-  const handleImageLoad = () => {
-    setImageLoaded(true)
-    setImageError(false)
-    setLoadingRetries(0)
-  }
+  // // Manejar carga exitosa de imagen
+  // const handleImageLoad = () => {
+  //   setImageLoaded(true)
+  //   setImageError(false)
+  //   setLoadingRetries(0)
+  // }
 
-  useEffect(() => {
-    // Resetear el estado de carga de imagen cuando cambia el ID de la cámara
-    setImageLoaded(false)
-    setImageError(false)
-    setLoadingRetries(0)
+  // useEffect(() => {
+  //   // Resetear el estado de carga de imagen cuando cambia el ID de la cámara
+  //   setImageLoaded(false)
+  //   setImageError(false)
+  //   setLoadingRetries(0)
 
-    // No precargar si debería mostrar offline
-    if (shouldShowOffline) return
+  //   // No precargar si debería mostrar offline
+  //   if (shouldShowOffline) return
 
-    // Precargar la imagen
-    const img = new Image()
-    img.onload = handleImageLoad
-    img.onerror = handleImageError
-    img.src = getImageForCamera(cameraId)
-    img.crossOrigin = "anonymous"
+  //   // Precargar la imagen
+  //   const img = new Image()
+  //   img.onload = handleImageLoad
+  //   img.onerror = handleImageError
+  //   img.src = getImageForCamera(cameraId)
+  //   img.crossOrigin = "anonymous"
 
-    return () => {
-      // Limpiar eventos al desmontar
-      img.onload = null
-      img.onerror = null
-    }
-  }, [cameraId, shouldShowOffline])
+  //   return () => {
+  //     // Limpiar eventos al desmontar
+  //     img.onload = null
+  //     img.onerror = null
+  //   }
+  // }, [cameraId, shouldShowOffline])
 
   if (shouldShowOffline) {
     return (
@@ -114,7 +114,7 @@ const CameraFeed: React.FC<CameraFeedProps> = ({
     return (
       <div className="relative w-full h-full bg-black overflow-hidden rounded-md">
         {/* Mostrar simulación mientras la imagen carga o si hay error */}
-        {(!imageLoaded || imageError) && (
+        {/* {(!imageLoaded || imageError) && (
           <div className="absolute inset-0">
             <CameraSimulation
               width={width}
@@ -136,16 +136,12 @@ const CameraFeed: React.FC<CameraFeedProps> = ({
               }
             />
           </div>
-        )}
+        )} */}
 
         <img
-          src={getImageForCamera(cameraId) || "/placeholder.svg"}
-          alt={`Cámara ${cameraId}`}
-          className={`w-full h-full object-cover ${!imageLoaded ? "opacity-0" : "opacity-100"}`}
-          onError={handleImageError}
-          onLoad={handleImageLoad}
-          style={{ transition: "opacity 0.3s ease-in-out" }}
-          crossOrigin="anonymous"
+          src={realCameraImages[Number(cameraId)]}
+          className={`w-full h-full object-cover `}
+
         />
 
         {/* Timestamp overlay */}

@@ -47,7 +47,7 @@ export const cameras: Camera[] = [
     id: 7,
     name: "Subestación Sur CD31-E",
     location: "Exterior",
-    status: "online",
+    status: "offline",
     lastMotion: "2 min atrás",
   },
   {
@@ -56,13 +56,6 @@ export const cameras: Camera[] = [
     location: "Exterior",
     status: "online",
     lastMotion: "Ahora mismo",
-  },
-  {
-    id: 9,
-    name: "Entrada Principal CD63-E",
-    location: "Exterior",
-    status: "online",
-    lastMotion: "3 min atrás",
   },
 ]
 
