@@ -561,7 +561,7 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
                     </div>
 
                     {/* Barra de búsqueda */}
-                    <div className="p-3 border-b border-gray-200 bg-gray-50">
+                    {/* <div className="p-3 border-b border-gray-200 bg-gray-50">
                         <div className="relative">
                             <input
                                 type="text"
@@ -604,7 +604,7 @@ const AlertsList: React.FC<AlertsListProps> = ({ onSelectAlert }) => {
                                 </button>
                             )}
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Filtro activo */}
                     {filter !== "all" && (
