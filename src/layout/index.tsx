@@ -17,7 +17,7 @@ interface LayouProps {
 }
 const App: React.FC<LayouProps> = ({ children }) => {
     const path = useLocation()
-    const [activeFilter, setActiveFilter] = useState<string | null>(null)
+    // const [activeFilter, setActiveFilter] = useState<string | null>(null)
     const [sidebarOpen, setSidebarOpen] = useState(false) // Cerrado por defecto en móvil
     const [isMobile, setIsMobile] = useState(false)
 
@@ -284,61 +284,45 @@ const App: React.FC<LayouProps> = ({ children }) => {
                 </div>
 
                 <div className="px-4 py-3 bg-[#152A5A] border-b border-[#0A1A40]/50 text-white overflow-x-auto">
+                    {/* Ruta de navegación - Solo visible en desktop */}
+                    <div className="hidden md:flex items-center text-sm whitespace-nowrap mb-2">
+                        <span className="font-medium">Exterior</span>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="size-4 mx-1 text-gray-400"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                        >
+                            <path
+                                fillRule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clipRule="evenodd"
+                            />
+                        </svg>
+                        <span>HQ - Synergy - 1</span>
+                    </div>
+
                     <div className="flex flex-col md:flex-row md:items-center space-y-2 md:space-y-0">
-                        <div className="flex items-center text-sm whitespace-nowrap">
-                            <span className="font-medium">Exterior</span>
+                        <div className="relative flex-1 min-w-0 md:min-w-[200px] md:max-w-xs">
+                            <input
+                                type="text"
+                                placeholder="Buscar cámaras..."
+                                className="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg border border-[#7FFF00]/30 bg-[#0A1A40] focus:outline-none focus:ring-2 focus:ring-[#7FFF00] focus:border-transparent text-white placeholder-gray-400"
+                            />
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
-                                className="size-4 mx-1 text-gray-400"
-                                viewBox="0 0 20 20"
-                                fill="currentColor"
+                                className="size-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
                             >
                                 <path
-                                    fillRule="evenodd"
-                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                    clipRule="evenodd"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                                 />
                             </svg>
-                            <span>HQ - Synergy - 1</span>
-                        </div>
-
-                        <div className="md:ml-auto flex flex-wrap gap-2">
-                            <div className="flex bg-[#0A1A40] rounded-lg p-1">
-                                <button
-                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${activeFilter === "online" ? "bg-[#7FFF00] text-[#0A1A40] shadow-sm" : "text-gray-300 hover:text-white"}`}
-                                    onClick={() => setActiveFilter(activeFilter === "online" ? null : "online")}
-                                >
-                                    En línea
-                                </button>
-                                <button
-                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-colors duration-200 ${activeFilter === "offline" ? "bg-[#7FFF00] text-[#0A1A40] shadow-sm" : "text-gray-300 hover:text-white"}`}
-                                    onClick={() => setActiveFilter(activeFilter === "offline" ? null : "offline")}
-                                >
-                                    Fuera de línea
-                                </button>
-                            </div>
-
-                            <div className="relative flex-1 min-w-[200px]">
-                                <input
-                                    type="text"
-                                    placeholder="Buscar cámaras..."
-                                    className="w-full pl-9 pr-4 py-1.5 text-sm rounded-lg border border-[#7FFF00]/30 bg-[#0A1A40] focus:outline-none focus:ring-2 focus:ring-[#7FFF00] focus:border-transparent text-white placeholder-gray-400"
-                                />
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="size-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                    />
-                                </svg>
-                            </div>
                         </div>
                     </div>
                 </div>
